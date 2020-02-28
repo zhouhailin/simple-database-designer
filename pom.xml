@@ -11,7 +11,7 @@
     <groupId>link.thingscloud</groupId>
     <artifactId>simple-database-designer</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>simple-database-designer</name>
+    <name>Simple Database Designer</name>
     <description>simple database designer project for spring boot</description>
 
     <properties>
@@ -23,6 +23,10 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/com.alibaba/easyexcel -->

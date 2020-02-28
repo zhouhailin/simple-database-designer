@@ -5,6 +5,5 @@ package link.thingscloud.simple.database.designer.service;
  */
 public interface TableParserService {
 
-    void startup();
 
 }

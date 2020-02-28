@@ -77,7 +77,7 @@ public class TableParserServiceImpl implements InitializingBean, TableParserServ
         if (fieldType == null) {
             log.error("parse column row index : {}, cause value is not number.", CellUtil.getRowIndex(idCell));
             log.error("parse field type failed, index {} : {}", CellUtil.getIndex(typeCell), typeCell.toString());
-            throw new RuntimeException("fieldType is invalid : " + CellUtil.getIndex(typeCell));
+            throw new IllegalArgumentException("fieldType is invalid : " + CellUtil.getIndex(typeCell));
         }
         Column column = new Column()
                 .setId(idCell.toString())
@@ -96,17 +96,6 @@ public class TableParserServiceImpl implements InitializingBean, TableParserServ
         }
         log.info("add row index : {}, column : {}", CellUtil.getRowIndex(idCell), column);
         table.getColumns().add(column);
-//        log.debug("  序号[{}] : {}, 字段名[{}] : {}, 类型[{}] : {}, 长度[{}] : {}, 小数点[{}] : {}, 允许NULL[{}] : {}, 默认值（空字符串）[{}] : {}, 主键[{}] : {}, 注释[{}] : {}",
-//                CellUtil.getIndex(idCell), idCell,
-//                CellUtil.getIndex(nameCell), nameCell,
-//                CellUtil.getIndex(typeCell), typeCell,
-//                CellUtil.getIndex(lengthCell), lengthCell,
-//                CellUtil.getIndex(decimalCell), decimalCell,
-//                CellUtil.getIndex(nullableCell), nullableCell,
-//                CellUtil.getIndex(defaultValueCell), defaultValueCell,
-//                CellUtil.getIndex(primaryKeyCell), primaryKeyCell,
-//                CellUtil.getIndex(commentCell), commentCell
-//        );
     }
 
     /**
@@ -127,7 +116,7 @@ public class TableParserServiceImpl implements InitializingBean, TableParserServ
 
         if (StrUtil.isBlank(fieldsCell.toString())) {
             log.error("parse row row index : {}, cause field must not be blank.", CellUtil.getRowIndex(idCell));
-            throw new RuntimeException("fieldType is invalid : " + CellUtil.getIndex(typeCell));
+            throw new IllegalArgumentException("fieldType is invalid : " + CellUtil.getIndex(typeCell));
         }
 
         List<String> fieldNameList = new ArrayList<>();
@@ -145,7 +134,7 @@ public class TableParserServiceImpl implements InitializingBean, TableParserServ
                 continue;
             }
             log.error("not found index field {} : {}", CellUtil.getIndex(typeCell), typeCell.toString());
-            throw new RuntimeException("index field is invalid : " + CellUtil.getIndex(typeCell));
+            throw new IllegalArgumentException("index field is invalid : " + CellUtil.getIndex(typeCell));
         }
         Index index0 = new Index()
                 .setId(idCell.toString())
@@ -245,8 +234,7 @@ public class TableParserServiceImpl implements InitializingBean, TableParserServ
         }
     }
 
-    @Override
-    public void startup() {
+    private void startup() {
         log.info("startup simpleGenerateDir : {} at {}", simpleGenerateDir, DateUtil.now());
         File simpleGenerateFile = new File(simpleGenerateDir);
         if (simpleGenerateFile.isDirectory()) {
@@ -259,7 +247,7 @@ public class TableParserServiceImpl implements InitializingBean, TableParserServ
                     // 打开文件后临时文件
                     continue;
                 }
-                if (file != null && file.isFile() && file.getName().endsWith(".xlsx")) {
+                if (file.isFile() && file.getName().endsWith(".xlsx")) {
                     handleWorkbook(file);
                 }
             }

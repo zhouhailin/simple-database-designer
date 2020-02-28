@@ -13,6 +13,8 @@ public abstract class AbstractGeneratorScript implements GeneratorScript {
 
     @Value("${appVersion}")
     private String appVersion;
+    @Value("${appName}")
+    private String appName;
     @Value("${appUrl}")
     private String appUrl;
 
@@ -22,12 +24,12 @@ public abstract class AbstractGeneratorScript implements GeneratorScript {
      */
     protected void appendInfo(StringBuilder sb, String dbName) {
         sb.append("/*").append(LF);
-        sb.append("  Simple Database Designer (").append(appVersion).append(")").append(LF);
-        sb.append("").append(LF);
-        sb.append("  Project URL : ").append(appUrl).append(LF);
-        sb.append("").append(LF);
+        sb.append("  ").append(appName).append(" (").append(appVersion).append(")").append(LF);
+        sb.append(LF);
+        sb.append("  Project URL  : ").append(appUrl).append(LF);
+        sb.append(LF);
         sb.append("  Database Type : ").append(dbName).append(LF);
-        sb.append("").append(LF);
+        sb.append(LF);
         sb.append("  Date : " + DateUtil.now()).append(LF);
         sb.append("*/").append(LF).append(LF);
     }
