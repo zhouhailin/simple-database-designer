@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${appName}">DEMO Template</title>
+
+    <!-- Bootstrap -->
+    <link th:href="@{/bootstrap/3.3.7/css/bootstrap.min.css}"
+          href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+
+    <!--[if lt IE 9]>
+    <script th:src="@{/html5shiv/3.7.3/html5shiv.min.js}"></script>
+    <script th:src="@{/respond/js.1.4.2/respond.min.js}"
+            src="https://cdn.bootcss.com/respond/js.1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <script th:src="@{/vue/2.5.16/vue.js}" src="https://cdn.bootcss.com/vue/2.5.16/vue.js"></script>
+    <script th:src="@{/axios/0.18.0/axios.js}" src="https://cdn.bootcss.com/axios/0.18.0/axios.js"></script>
+    <script th:src="@{/node-uuid/1.4.8/uuid.js}" src="https://cdn.bootcss.com/node-uuid/1.4.8/uuid.js"></script>
+    <script th:src="@{/crypto-js/3.1.9/crypto-js.js}"
+            src="https://cdn.bootcss.com/crypto-js/3.1.9/crypto-js.js"></script>
+
+</head>
+<body>
+
+
+<div id="app" class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h1 align="center" th:text="${appName}">DEMO Template</h1>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-offset-6 col-md-4" style="text-align: left;">
+            <h4 align="right" th:text="${appVersion}">DEMO Template</h4>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-1">
+            <div class="checkbox">
+                <label>
+                    File :
+                </label>
+            </div>
+        </div>
+        <div class="col-md-11">
+            <div class="checkbox">
+                <input id="exampleInputFile" ref="exampleInputFile" name="exampleInputFile"
+                       @change="changeExampleInputFile" type="file" multiple="multiple" accept=".xlsx">
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-1">
+            <div class="checkbox">
+                <label>
+                    Script :
+                </label>
+            </div>
+        </div>
+        <div class="col-md-1">
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox" v-model="script.mysql"> MySQL
+                </label>
+            </div>
+        </div>
+        <div class="col-md-1">
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox" v-model="script.oracle"> ORACLE
+                </label>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox" v-model="script.mssql"> MS SQL SERVER
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-1">
+            <div class="checkbox">
+                <label>
+                    Code :
+                </label>
+            </div>
+        </div>
+        <div class="col-md-1">
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox" v-model="code.java"> Java
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <button type="button" class="btn btn-default" @click="doGenerating">生成</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    var app = new Vue({
+        el: '#app',
+        data: {
+            message: 'Hello Vue!',
+            script: {
+                mysql: true,
+                mssql: true,
+                oracle: true
+            },
+            code: {
+                java: false
+            }
+        },
+        methods: {
+            doGenerating() {
+                console.log("----", this.script.mysql, this.script.mssql, this.script.oracle, this.code);
+            },
+            changeExampleInputFile(evt) {
+                console.log(evt);
+            }
+        }
+    })
+</script>
+
+<!-- jQuery (Bootstrap 的所有 JavaScript 插件都依赖 jQuery，所以必须放在前边) -->
+<script th:src="@{/jquery/1.12.4/jquery.min.js}" src="https://cdn.bootcss.com/jquery/1.12.4/jquery.min.js"></script>
+<!-- 加载 Bootstrap 的所有 JavaScript 插件。你也可以根据需要只加载单个插件。 -->
+<script th:src="@{/bootstrap/3.3.7/js/bootstrap.min.js}"
+        src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+</body>
+</html>
