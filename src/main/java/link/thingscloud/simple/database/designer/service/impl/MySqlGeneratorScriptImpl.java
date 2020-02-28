@@ -2,14 +2,15 @@ package link.thingscloud.simple.database.designer.service.impl;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.StrUtil;
-import link.thingscloud.simple.database.designer.domain.Column;
 import link.thingscloud.simple.database.designer.domain.FieldTypeEnum;
 import link.thingscloud.simple.database.designer.domain.Table;
+import link.thingscloud.simple.database.designer.util.ConsumerUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static cn.hutool.core.util.StrUtil.LF;
 
@@ -59,10 +60,6 @@ public class MySqlGeneratorScriptImpl extends AbstractGeneratorScript {
         }
     }
 
-    private void appendColumn(final StringBuilder sb, Column column) {
-
-    }
-
     /**
      * CREATE TABLE `obs`.`Untitled`  (
      * `id` bigint(0) NOT NULL COMMENT '自增主键',
@@ -83,6 +80,7 @@ public class MySqlGeneratorScriptImpl extends AbstractGeneratorScript {
         sb.append("-- ----------------------------").append(LF);
         sb.append("-- Table structure for ").append(table.getName()).append(LF);
         sb.append("-- ----------------------------").append(LF);
+
         if (StrUtil.isBlank(table.getDbName())) {
             sb.append("DROP TABLE IF EXISTS `").append(table.getName()).append("`;").append(LF);
             sb.append("CREATE TABLE `").append(table.getName()).append("`  (").append(LF);
@@ -90,70 +88,96 @@ public class MySqlGeneratorScriptImpl extends AbstractGeneratorScript {
             sb.append("DROP TABLE IF EXISTS `").append(table.getDbName()).append("`.`").append(table.getName()).append("`;").append(LF);
             sb.append("CREATE TABLE `").append(table.getDbName()).append("`.`").append(table.getName()).append("`  (").append(LF);
         }
-        boolean autoIncrement = false;
 
-        String primaryKey = "";
-        for (Column column : table.getColumns()) {
-            sb.append("`").append(column.getName()).append("`");
-            // 是否为主键
-            if (StrUtil.contains(column.getPrimaryKey(), "是")) {
-                // PRIMARY KEY (`xx`, `id`)
-                if (StrUtil.isEmpty(primaryKey)) {
-                    primaryKey += "`" + column.getName() + "`";
-                } else {
-                    primaryKey += ", `" + column.getName() + "`";
-                }
-                // `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '自增主键',
-                // `id` bigint(0) NOT NULL COMMENT '自增主键',
-                // `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '自增主键',
-                //  `xx` bigint(255) NOT NULL AUTO_INCREMENT,
-                sb.append(" bigint(20) NOT NULL");
-                if (StrUtil.contains(column.getPrimaryKey(), "自动递增")) {
-                    sb.append(" AUTO_INCREMENT");
-                    autoIncrement = true;
-                }
-                if (StrUtil.isNotBlank(column.getComment())) {
-                    sb.append(" COMMENT '").append(column.getComment()).append("'");
-                }
+        AtomicBoolean autoIncremnet = new AtomicBoolean(false);
+
+        StringBuilder sbPk = new StringBuilder();
+
+        // `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '自增主键',
+        // `id` bigint(0) NOT NULL COMMENT '自增主键',
+        // `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '自增主键',
+        //  `xx` bigint(255) NOT NULL AUTO_INCREMENT,
+        ConsumerUtil.doAccept(table.getColumns(), (prev, current, next) -> {
+            // 当前是否是第一个字段
+            if (prev != null) {
                 sb.append(",").append(LF);
-                continue;
             }
+            // 字段名
+            sb.append("  `").append(current.getName()).append("`");
+            if (current.isPrimaryKey()) {
+                if (StrUtil.isNotEmpty(sbPk.toString())) {
+                    sbPk.append(", ");
+                }
+                sbPk.append("`").append(current.getName()).append("`");
 
-            // 数据类型
-            appendDbType(sb, column.getType(), column.getLength(), column.getScale());
-
-            // 是否可以为空
-            if (column.isNullable()) {
-                sb.append(" NOT NULL");
+                sb.append(" bigint(20) NOT NULL");
+                if (current.isAutoIncrement()) {
+                    sb.append(" AUTO_INCREMENT");
+                    autoIncremnet.set(true);
+                }
             } else {
-                sb.append(" NULL");
-            }
+                // 数据类型
+                appendDbType(sb, current.getType(), current.getLength(), current.getScale());
 
-            // 默认值设置
-            if (StrUtil.isNotBlank(column.getDefaultValue())) {
-                if (StrUtil.containsAny(column.getDefaultValue(), "空字符串", "EMPTY_STRING")) {
-                    sb.append(" DEFAULT ''");
+                // 是否可以为空
+                if (current.isNullable()) {
+                    sb.append(" NOT NULL");
                 } else {
-                    sb.append(" DEFAULT '").append(column.getDefaultValue()).append("'");
+                    sb.append(" NULL");
+                }
+
+                // 默认值设置
+                if (StrUtil.isNotBlank(current.getDefaultValue())) {
+                    if (StrUtil.containsAny(current.getDefaultValue(), "空字符串", "EMPTY_STRING")) {
+                        sb.append(" DEFAULT ''");
+                    } else {
+                        sb.append(" DEFAULT '").append(current.getDefaultValue()).append("'");
+                    }
                 }
             }
-
-            // 字段说明
-            if (StrUtil.isNotBlank(column.getComment())) {
-                sb.append(" COMMENT '").append(column.getComment()).append("'");
+            // 添加备注信息
+            if (StrUtil.isNotBlank(current.getComment())) {
+                sb.append(" COMMENT '").append(current.getComment()).append("'");
             }
-            sb.append(",").append(LF);
+        });
+
+        // 当前是最后一个字段，判断是否存在主键信息
+        if (StrUtil.isNotEmpty(sbPk.toString())) {
+            sb.append(",").append(LF).append("  PRIMARY KEY (").append(sbPk.toString()).append(")");
         }
 
-        if (StrUtil.isNotEmpty(primaryKey)) {
-            sb.append("PRIMARY KEY (").append(primaryKey).append(")").append(LF);
-        }
+        //  PRIMARY KEY (`id`),
+        //  UNIQUE INDEX `idx_xx`(`name`, `age`)
+        // 处理索引
+        ConsumerUtil.doAccept(table.getIndexs(), (prev, current, next) -> {
+            if (StrUtil.isBlank(current.getName())) {
+                return;
+            }
+            sb.append(",").append(LF).append(" ");
+            if (current.isUniqueIndex()) {
+                sb.append(" UNIQUE");
+            }
+            sb.append(" INDEX `").append(StrUtil.trim(current.getName())).append("`(");
+            ConsumerUtil.doAccept(current.getFieldNames(), (prev1, current1, next1) -> {
+                if (prev1 != null) {
+                    sb.append(", ");
+                }
+                sb.append("`").append(current1).append("`");
+            });
+            sb.append(")");
+            if (StrUtil.isNotBlank(current.getComment())) {
+                sb.append(" COMMENT '").append(current.getComment()).append("'");
+            }
+        });
+
+        sb.append(LF);
+
         if (StrUtil.equalsIgnoreCase(table.getCharset(), "utf8mb4")) {
             sb.append(") ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci");
         } else {
             sb.append(") ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci");
         }
-        if (autoIncrement) {
+        if (autoIncremnet.get()) {
             sb.append(" AUTO_INCREMENT = 1");
         }
         if (StrUtil.isNotBlank(table.getComment())) {
@@ -162,6 +186,7 @@ public class MySqlGeneratorScriptImpl extends AbstractGeneratorScript {
         sb.append(";").append(LF);
         // ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '星河盛世' ROW_FORMAT = Dynamic
         sb.append(LF);
+        System.out.println(sb.toString());
     }
 
     @Override

@@ -12,7 +12,7 @@ public class CellUtil {
     }
 
     public static int getRowIndex(XSSFCell cell) {
-        return cell.getRowIndex();
+        return cell.getRowIndex() + 1;
     }
 
     public static String getIndex(XSSFCell cell) {

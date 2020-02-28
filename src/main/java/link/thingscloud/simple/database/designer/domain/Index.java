@@ -3,7 +3,6 @@ package link.thingscloud.simple.database.designer.domain;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -11,11 +10,11 @@ import java.util.List;
  */
 @Data
 @Accessors(chain = true)
-public class Table {
-    private String charset;
-    private String dbName;
+public class Index {
+    private String id;
     private String name;
+    private boolean uniqueIndex;
+    private String method;
+    private List<String> fieldNames;
     private String comment;
-    private List<Column> columns = new ArrayList<>(256);
-    private List<Index> indexs = new ArrayList<>(64);
 }

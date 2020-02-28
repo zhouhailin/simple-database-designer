@@ -5,6 +5,7 @@ import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
 import link.thingscloud.simple.database.designer.domain.Column;
 import link.thingscloud.simple.database.designer.domain.FieldTypeEnum;
+import link.thingscloud.simple.database.designer.domain.Index;
 import link.thingscloud.simple.database.designer.domain.Table;
 import link.thingscloud.simple.database.designer.service.GeneratorScript;
 import link.thingscloud.simple.database.designer.service.TableParserService;
@@ -39,36 +40,26 @@ public class TableParserServiceImpl implements InitializingBean, TableParserServ
 
     private final List<Table> tables = new ArrayList<>(254);
 
-    private void handleRow(Table table, XSSFRow row) {
-        XSSFCell cell = row.getCell(1);
-        if (cell == null) {
-            return;
+    private void handleTableInfo(Table table, XSSFRow row) {
+        XSSFCell charsetCell = row.getCell(3);
+        XSSFCell databaseCell = row.getCell(5);
+        XSSFCell tableNameCell = row.getCell(7);
+        XSSFCell tableCommentCell = row.getCell(9);
+        if (StrUtil.isNotBlank(charsetCell.toString())) {
+            table.setCharset(charsetCell.toString());
         }
-        String cellValue = cell.toString();
-        if (StrUtil.isBlank(cellValue)) {
-            return;
-        }
-        if (StrUtil.equals(cellValue, "#")) {
-            XSSFCell charsetCell = row.getCell(3);
-            XSSFCell databaseCell = row.getCell(5);
-            XSSFCell tableNameCell = row.getCell(7);
-            XSSFCell tableCommentCell = row.getCell(9);
-            if (StrUtil.isNotBlank(charsetCell.toString())) {
-                table.setCharset(charsetCell.toString());
-            }
-            table.setDbName(databaseCell.getStringCellValue())
-                    .setName(tableNameCell.getStringCellValue())
-                    .setComment(tableCommentCell.getStringCellValue());
-            log.info("charset[{}] : {}, database name[{}] : {}, table name[{}] : {}, comment[{}] : {}",
-                    CellUtil.getIndex(charsetCell), table.getCharset(),
-                    CellUtil.getIndex(databaseCell), table.getDbName(),
-                    CellUtil.getIndex(tableNameCell), table.getName(),
-                    CellUtil.getIndex(tableCommentCell), table.getComment());
-            return;
-        }
-        if (!NumberUtil.isNumber(cellValue)) {
-            return;
-        }
+        table.setDbName(databaseCell.getStringCellValue())
+                .setName(tableNameCell.getStringCellValue())
+                .setComment(tableCommentCell.getStringCellValue());
+        log.info("add row index : {}, table header charset[{}] : {}, database name[{}] : {}, table name[{}] : {}, comment[{}] : {}",
+                CellUtil.getRowIndex(charsetCell),
+                CellUtil.getIndex(charsetCell), table.getCharset(),
+                CellUtil.getIndex(databaseCell), table.getDbName(),
+                CellUtil.getIndex(tableNameCell), table.getName(),
+                CellUtil.getIndex(tableCommentCell), table.getComment());
+    }
+
+    private void handleColumnInfo(Table table, XSSFRow row) {
         XSSFCell idCell = row.getCell(1);
         XSSFCell nameCell = row.getCell(2);
         XSSFCell typeCell = row.getCell(3);
@@ -79,14 +70,16 @@ public class TableParserServiceImpl implements InitializingBean, TableParserServ
         XSSFCell primaryKeyCell = row.getCell(8);
         XSSFCell commentCell = row.getCell(9);
         if (StrUtil.isBlank(nameCell.toString())) {
+            log.info("ignore row index : {}, cause column name is blank.", CellUtil.getRowIndex(nameCell));
             return;
         }
         FieldTypeEnum fieldType = getFieldType(typeCell.toString());
         if (fieldType == null) {
+            log.error("parse column row index : {}, cause value is not number.", CellUtil.getRowIndex(idCell));
             log.error("parse field type failed, index {} : {}", CellUtil.getIndex(typeCell), typeCell.toString());
-            throw new RuntimeException("fieldType is not valid : " + CellUtil.getIndex(typeCell));
+            throw new RuntimeException("fieldType is invalid : " + CellUtil.getIndex(typeCell));
         }
-        table.getColumns().add(new Column()
+        Column column = new Column()
                 .setId(idCell.toString())
                 .setName(nameCell.toString())
                 .setType(fieldType)
@@ -94,20 +87,105 @@ public class TableParserServiceImpl implements InitializingBean, TableParserServ
                 .setScale(NumberUtil.parseInt(decimalCell.toString()))
                 .setNullable(StrUtil.equals(nullableCell.toString(), "否"))
                 .setDefaultValue(defaultValueCell.toString())
-                .setPrimaryKey(primaryKeyCell.toString())
-                .setComment(commentCell.toString())
-        );
-        log.info("  序号[{}] : {}, 字段名[{}] : {}, 类型[{}] : {}, 长度[{}] : {}, 小数点[{}] : {}, 允许NULL[{}] : {}, 默认值（空字符串）[{}] : {}, 主键[{}] : {}, 注释[{}] : {}",
-                CellUtil.getIndex(idCell), idCell,
-                CellUtil.getIndex(nameCell), nameCell,
-                CellUtil.getIndex(typeCell), typeCell,
-                CellUtil.getIndex(lengthCell), lengthCell,
-                CellUtil.getIndex(decimalCell), decimalCell,
-                CellUtil.getIndex(nullableCell), nullableCell,
-                CellUtil.getIndex(defaultValueCell), defaultValueCell,
-                CellUtil.getIndex(primaryKeyCell), primaryKeyCell,
-                CellUtil.getIndex(commentCell), commentCell
-        );
+                .setComment(commentCell.toString());
+        if (StrUtil.containsAny(primaryKeyCell.toString(), "是")) {
+            column.setPrimaryKey(true);
+            if (StrUtil.containsAny(primaryKeyCell.toString(), "自动递增")) {
+                column.setAutoIncrement(true);
+            }
+        }
+        log.info("add row index : {}, column : {}", CellUtil.getRowIndex(idCell), column);
+        table.getColumns().add(column);
+//        log.debug("  序号[{}] : {}, 字段名[{}] : {}, 类型[{}] : {}, 长度[{}] : {}, 小数点[{}] : {}, 允许NULL[{}] : {}, 默认值（空字符串）[{}] : {}, 主键[{}] : {}, 注释[{}] : {}",
+//                CellUtil.getIndex(idCell), idCell,
+//                CellUtil.getIndex(nameCell), nameCell,
+//                CellUtil.getIndex(typeCell), typeCell,
+//                CellUtil.getIndex(lengthCell), lengthCell,
+//                CellUtil.getIndex(decimalCell), decimalCell,
+//                CellUtil.getIndex(nullableCell), nullableCell,
+//                CellUtil.getIndex(defaultValueCell), defaultValueCell,
+//                CellUtil.getIndex(primaryKeyCell), primaryKeyCell,
+//                CellUtil.getIndex(commentCell), commentCell
+//        );
+    }
+
+    /**
+     * @param table
+     * @param row
+     */
+    private void handleIndexInfo(Table table, XSSFRow row) {
+        XSSFCell idCell = row.getCell(1);
+        XSSFCell nameCell = row.getCell(2);
+        XSSFCell typeCell = row.getCell(3);
+        XSSFCell methodCell = row.getCell(4);
+        XSSFCell fieldsCell = row.getCell(5);
+        XSSFCell commentCell = row.getCell(9);
+        if (StrUtil.isBlank(nameCell.toString())) {
+            log.info("ignore row index : {}, cause index name is blank.", CellUtil.getRowIndex(nameCell));
+            return;
+        }
+
+        if (StrUtil.isBlank(fieldsCell.toString())) {
+            log.error("parse row row index : {}, cause field must not be blank.", CellUtil.getRowIndex(idCell));
+            throw new RuntimeException("fieldType is invalid : " + CellUtil.getIndex(typeCell));
+        }
+
+        List<String> fieldNameList = new ArrayList<>();
+
+        String[] fileldNameArr = StrUtil.split(fieldsCell.toString(), ",");
+        for (String fieldName : fileldNameArr) {
+            boolean found = false;
+            for (Column column : table.getColumns()) {
+                if (StrUtil.equalsIgnoreCase(StrUtil.trimToEmpty(fieldName), column.getName())) {
+                    fieldNameList.add(column.getName());
+                    found = true;
+                }
+            }
+            if (found) {
+                continue;
+            }
+            log.error("not found index field {} : {}", CellUtil.getIndex(typeCell), typeCell.toString());
+            throw new RuntimeException("index field is invalid : " + CellUtil.getIndex(typeCell));
+        }
+        Index index0 = new Index()
+                .setId(idCell.toString())
+                .setName(StrUtil.trimToEmpty(nameCell.toString()))
+                .setUniqueIndex(StrUtil.containsAny(typeCell.toString(), "Unique"))
+                .setFieldNames(fieldNameList)
+                .setMethod(methodCell.toString())
+                .setComment(StrUtil.trimToEmpty(commentCell.toString()));
+        log.info("add row index : {}, index : {}", CellUtil.getRowIndex(idCell), index0);
+        table.getIndexs().add(index0);
+    }
+
+    private boolean isIndexInfo = false;
+
+    private void handleRow(Table table, XSSFRow row) {
+        XSSFCell cell = row.getCell(1);
+        if (cell == null) {
+            return;
+        }
+        String cellValue = cell.toString();
+        if (StrUtil.isBlank(cellValue)) {
+            log.info("ignore row index : {}, cause value is blank.", CellUtil.getRowIndex(cell));
+            return;
+        }
+        if (StrUtil.equals(cellValue, "#")) {
+            handleTableInfo(table, row);
+            return;
+        } else if (StrUtil.contains(cellValue, "索引")) {
+            isIndexInfo = true;
+            return;
+        }
+        if (!NumberUtil.isNumber(cellValue)) {
+            log.info("ignore row index : {}, cause value is not number.", CellUtil.getRowIndex(cell));
+            return;
+        }
+        if (isIndexInfo) {
+            handleIndexInfo(table, row);
+        } else {
+            handleColumnInfo(table, row);
+        }
     }
 
     /**
@@ -141,8 +219,8 @@ public class TableParserServiceImpl implements InitializingBean, TableParserServ
         return null;
     }
 
-    private void handleSheet(XSSFSheet sheet) {
-        log.info("handleSheet name : {}", sheet.getSheetName());
+    private void handleSheet(File file, XSSFSheet sheet) {
+        log.info("handle Workbook name : {}, Sheet name : {}", file.getName(), sheet.getSheetName());
         Table table = new Table();
         for (int i = 0; i < sheet.getLastRowNum(); i++) {
             handleRow(table, sheet.getRow(i));
@@ -156,10 +234,10 @@ public class TableParserServiceImpl implements InitializingBean, TableParserServ
                 log.warn("file is not exist, absolute path : {}", file.getAbsolutePath());
                 return;
             }
-            log.info("handleWorkbook name : {}", file.getName());
+            log.info("handle Workbook name : {}", file.getName());
             try (XSSFWorkbook workbook = new XSSFWorkbook(file)) {
                 for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
-                    handleSheet(workbook.getSheetAt(i));
+                    handleSheet(file, workbook.getSheetAt(i));
                 }
             }
         } catch (IOException | InvalidFormatException e) {
@@ -177,6 +255,10 @@ public class TableParserServiceImpl implements InitializingBean, TableParserServ
                 return;
             }
             for (File file : files) {
+                if (file.getName().startsWith("~$")) {
+                    // 打开文件后临时文件
+                    continue;
+                }
                 if (file != null && file.isFile() && file.getName().endsWith(".xlsx")) {
                     handleWorkbook(file);
                 }

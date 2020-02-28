@@ -18,6 +18,7 @@ public class Column {
     private Integer scale;
     private boolean nullable;
     private String defaultValue;
-    private String primaryKey;
+    private boolean primaryKey;
+    private boolean autoIncrement;
     private String comment;
 }
