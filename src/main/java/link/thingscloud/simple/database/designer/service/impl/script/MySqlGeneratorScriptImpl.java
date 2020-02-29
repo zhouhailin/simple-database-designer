@@ -76,8 +76,6 @@ public class MySqlGeneratorScriptImpl extends AbstractGeneratorScript {
     private void doGenerateTableScript(final StringBuilder sb, Table table) {
         log.info("generate table name : {}", table.getName());
 
-        appendInfo(sb, "MySQL");
-
         sb.append("-- ----------------------------").append(LF);
         sb.append("-- Table structure for ").append(table.getName()).append(LF);
         sb.append("-- ----------------------------").append(LF);
@@ -187,16 +185,20 @@ public class MySqlGeneratorScriptImpl extends AbstractGeneratorScript {
         sb.append(";").append(LF);
         // ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '星河盛世' ROW_FORMAT = Dynamic
         sb.append(LF);
-        System.out.println(sb.toString());
     }
 
     @Override
     public void doGenerateScript(File scriptDir, Collection<Table> tables) {
         log.info("do generate mysql script ...");
         StringBuilder sb = new StringBuilder();
+
+        appendInfo(sb, "MySQL");
+
         tables.forEach(table -> {
             doGenerateTableScript(sb, table);
         });
+
+        log.debug("do generate mysql script : \n{}", sb.toString());
         FileUtil.writeUtf8String(sb.toString(), new File(scriptDir, scriptDir.getName() + "-mysql.sql"));
     }
 }

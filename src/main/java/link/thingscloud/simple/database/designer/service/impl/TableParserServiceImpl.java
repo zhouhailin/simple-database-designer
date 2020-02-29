@@ -165,6 +165,7 @@ public class TableParserServiceImpl implements InitializingBean, TableParserServ
             return;
         }
         if (StrUtil.equals(cellValue, "#")) {
+            isIndexInfo = false;
             handleTableInfo(table, row);
             return;
         } else if (StrUtil.contains(cellValue, "索引")) {
