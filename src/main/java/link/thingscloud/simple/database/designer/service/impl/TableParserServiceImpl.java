@@ -7,6 +7,7 @@ import link.thingscloud.simple.database.designer.domain.Column;
 import link.thingscloud.simple.database.designer.domain.FieldTypeEnum;
 import link.thingscloud.simple.database.designer.domain.Index;
 import link.thingscloud.simple.database.designer.domain.Table;
+import link.thingscloud.simple.database.designer.service.GeneratorCode;
 import link.thingscloud.simple.database.designer.service.GeneratorScript;
 import link.thingscloud.simple.database.designer.service.TableParserService;
 import link.thingscloud.simple.database.designer.util.CellUtil;
@@ -35,8 +36,12 @@ public class TableParserServiceImpl implements InitializingBean, TableParserServ
 
     @Value("${simpleGenerateDir}")
     private String simpleGenerateDir;
+    @Value("${simplePackageName}")
+    private String simplePackageName;
     @Autowired
     private List<GeneratorScript> generateScripts;
+    @Autowired
+    private List<GeneratorCode> generatorCodes;
 
     private final List<Table> tables = new ArrayList<>(254);
 
@@ -214,6 +219,12 @@ public class TableParserServiceImpl implements InitializingBean, TableParserServ
         for (int i = 0; i < sheet.getLastRowNum(); i++) {
             handleRow(table, sheet.getRow(i));
         }
+        for (Table table0 : tables) {
+            if (StrUtil.equalsIgnoreCase(table0.getDbName() + "." + table0.getName(), table.getDbName() + "." + table.getName())) {
+                log.error("ignore file : {}, sheet name : {}, table : {}, table is existed", file.getName(), sheet.getSheetName(), table.getDbName() + "." + table.getName());
+                return;
+            }
+        }
         tables.add(table);
     }
 
@@ -256,8 +267,14 @@ public class TableParserServiceImpl implements InitializingBean, TableParserServ
         if (tables.isEmpty()) {
             return;
         }
+
+        // 生成脚本
         generateScripts.forEach(
                 generatorScript -> generatorScript.doGenerateScript(simpleGenerateFile, tables)
+        );
+        // 生成代码
+        generatorCodes.forEach(
+                generatorCode -> generatorCode.doGenerateCode(simplePackageName, simpleGenerateFile, tables)
         );
     }
 

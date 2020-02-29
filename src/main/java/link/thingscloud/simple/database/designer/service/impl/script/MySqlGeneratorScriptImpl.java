@@ -1,9 +1,10 @@
-package link.thingscloud.simple.database.designer.service.impl;
+package link.thingscloud.simple.database.designer.service.impl.script;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.StrUtil;
 import link.thingscloud.simple.database.designer.domain.FieldTypeEnum;
 import link.thingscloud.simple.database.designer.domain.Table;
+import link.thingscloud.simple.database.designer.service.impl.AbstractGeneratorScript;
 import link.thingscloud.simple.database.designer.util.ConsumerUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

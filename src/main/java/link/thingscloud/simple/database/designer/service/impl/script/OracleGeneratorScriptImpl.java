@@ -1,7 +1,8 @@
-package link.thingscloud.simple.database.designer.service.impl;
+package link.thingscloud.simple.database.designer.service.impl.script;
 
 import cn.hutool.core.io.FileUtil;
 import link.thingscloud.simple.database.designer.domain.Table;
+import link.thingscloud.simple.database.designer.service.impl.AbstractGeneratorScript;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -13,17 +14,16 @@ import java.util.Collection;
  */
 @Slf4j
 @Service
-public class MssqlGeneratorScriptImpl extends AbstractGeneratorScript {
+public class OracleGeneratorScriptImpl extends AbstractGeneratorScript {
     @Override
     public void doGenerateScript(File scriptDir, Collection<Table> tables) {
-        log.info("do generate mssql script ...");
+        log.info("do generate oracle script ...");
         StringBuilder sb = new StringBuilder();
 
-        appendInfo(sb, "MS SQL SERVER");
+        appendInfo(sb, "ORACLE");
 
         tables.forEach(table -> {
-
         });
-        FileUtil.writeUtf8String(sb.toString(), new File(scriptDir, scriptDir.getName() + "-mssql.sql"));
+        FileUtil.writeUtf8String(sb.toString(), new File(scriptDir, scriptDir.getName() + "-oracle.sql"));
     }
 }
