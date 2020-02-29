@@ -3,10 +3,7 @@ package link.thingscloud.simple.database.designer.service.impl;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
-import link.thingscloud.simple.database.designer.domain.Column;
-import link.thingscloud.simple.database.designer.domain.FieldTypeEnum;
-import link.thingscloud.simple.database.designer.domain.Index;
-import link.thingscloud.simple.database.designer.domain.Table;
+import link.thingscloud.simple.database.designer.domain.*;
 import link.thingscloud.simple.database.designer.service.GeneratorCode;
 import link.thingscloud.simple.database.designer.service.GeneratorScript;
 import link.thingscloud.simple.database.designer.service.TableParserService;
@@ -36,14 +33,25 @@ public class TableParserServiceImpl implements InitializingBean, TableParserServ
 
     @Value("${simpleGenerateDir}")
     private String simpleGenerateDir;
-    @Value("${simplePackageName}")
-    private String simplePackageName;
+    @Value("${code.info.namespace}")
+    private String namespace;
+
     @Autowired
     private List<GeneratorScript> generateScripts;
     @Autowired
     private List<GeneratorCode> generatorCodes;
 
     private final List<Table> tables = new ArrayList<>(254);
+
+    private void handleCodeInfo(Table table, XSSFRow row) {
+        XSSFCell namespaceCell = row.getCell(3);
+        XSSFCell authorCell = row.getCell(5);
+        XSSFCell reqUrlCell = row.getCell(7);
+        table.setCodeInfo(new CodeInfo()
+                .setNamespace(StrUtil.trimToEmpty(namespaceCell.toString()))
+                .setAuthor(StrUtil.trimToEmpty(authorCell.toString()))
+                .setRequestUrl(StrUtil.trimToEmpty(reqUrlCell.toString())));
+    }
 
     private void handleTableInfo(Table table, XSSFRow row) {
         XSSFCell charsetCell = row.getCell(3);
@@ -86,7 +94,7 @@ public class TableParserServiceImpl implements InitializingBean, TableParserServ
         }
         Column column = new Column()
                 .setId(idCell.toString())
-                .setName(nameCell.toString())
+                .setName(nameCell.toString().toLowerCase())
                 .setType(fieldType)
                 .setLength(NumberUtil.parseInt(lengthCell.toString()))
                 .setScale(NumberUtil.parseInt(decimalCell.toString()))
@@ -171,6 +179,9 @@ public class TableParserServiceImpl implements InitializingBean, TableParserServ
         } else if (StrUtil.contains(cellValue, "索引")) {
             isIndexInfo = true;
             return;
+        } else if (StrUtil.equals(cellValue, "#2")) {
+            // java code info
+            handleCodeInfo(table, row);
         }
         if (!NumberUtil.isNumber(cellValue)) {
             log.info("ignore row index : {}, cause value is not number.", CellUtil.getRowIndex(cell));
@@ -275,7 +286,7 @@ public class TableParserServiceImpl implements InitializingBean, TableParserServ
         );
         // 生成代码
         generatorCodes.forEach(
-                generatorCode -> generatorCode.doGenerateCode(simplePackageName, simpleGenerateFile, tables)
+                generatorCode -> generatorCode.doGenerateCode(namespace, simpleGenerateFile, tables)
         );
     }
 

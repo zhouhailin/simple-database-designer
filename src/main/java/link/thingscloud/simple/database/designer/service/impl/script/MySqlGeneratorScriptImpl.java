@@ -109,7 +109,7 @@ public class MySqlGeneratorScriptImpl extends AbstractGeneratorScript {
                 }
                 sbPk.append("`").append(current.getName()).append("`");
 
-                sb.append(" bigint(20) NOT NULL");
+                sb.append(" bigint(20) UNSIGNED NOT NULL");
                 if (current.isAutoIncrement()) {
                     sb.append(" AUTO_INCREMENT");
                     autoIncremnet.set(true);

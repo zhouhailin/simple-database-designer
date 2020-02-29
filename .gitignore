@@ -32,5 +32,6 @@ build/
 
 todo
 example/*.sql
+example/code
 
 ~$*

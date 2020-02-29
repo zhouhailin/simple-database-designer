@@ -18,4 +18,5 @@ public class Table {
     private String comment;
     private List<Column> columns = new ArrayList<>(256);
     private List<Index> indexs = new ArrayList<>(64);
+    private CodeInfo codeInfo;
 }
