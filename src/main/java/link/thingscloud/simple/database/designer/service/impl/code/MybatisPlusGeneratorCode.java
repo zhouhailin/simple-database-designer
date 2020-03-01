@@ -44,7 +44,7 @@ public class MybatisPlusGeneratorCode extends AbstractGeneratorCode {
         }
     }
 
-    private void doGenerateController(TableInfo info, String requestUrl, Table table) {
+    private void doGenerateController(TableInfo info, String moduleName, Table table) {
         log.debug("generate controller {} ...", info.getServiceImplFullClassName());
         StringBuilder sb = new StringBuilder();
         sb.append("package ").append(info.getControllerPkgName()).append(";").append(LF)
@@ -65,7 +65,7 @@ public class MybatisPlusGeneratorCode extends AbstractGeneratorCode {
         sb
                 .append(" */").append(LF)
                 .append("@RestController").append(LF)
-                .append("@RequestMapping(\"").append(requestUrl).append("\")").append(LF)
+                .append("@RequestMapping(\"/").append(moduleName).append(info.getCamelCaseName()).append("\")").append(LF)
                 .append("public class ").append(info.getControllerSimpleClassName()).append(" {").append(LF)
                 .append(LF)
                 .append("}")
@@ -308,8 +308,10 @@ public class MybatisPlusGeneratorCode extends AbstractGeneratorCode {
             doGenerateMapper(info, table);
             doGenerateService(info, table);
             doGenerateServiceImpl(info, table);
-            if (table.getCodeInfo() != null && StrUtil.isNotBlank(table.getCodeInfo().getRequestUrl())) {
-                doGenerateController(info, table.getCodeInfo().getRequestUrl(), table);
+            if (table.getCodeInfo() != null && StrUtil.isNotBlank(table.getCodeInfo().getModuleName())) {
+                doGenerateController(info, table.getCodeInfo().getModuleName() + "/", table);
+            } else {
+                doGenerateController(info, "", table);
             }
         });
     }

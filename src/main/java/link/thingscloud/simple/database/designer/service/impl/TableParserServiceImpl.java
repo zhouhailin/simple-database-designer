@@ -46,11 +46,11 @@ public class TableParserServiceImpl implements InitializingBean, TableParserServ
     private void handleCodeInfo(Table table, XSSFRow row) {
         XSSFCell namespaceCell = row.getCell(3);
         XSSFCell authorCell = row.getCell(5);
-        XSSFCell reqUrlCell = row.getCell(7);
+        XSSFCell moduleNameCell = row.getCell(7);
         table.setCodeInfo(new CodeInfo()
                 .setNamespace(StrUtil.trimToEmpty(namespaceCell.toString()))
                 .setAuthor(StrUtil.trimToEmpty(authorCell.toString()))
-                .setRequestUrl(StrUtil.trimToEmpty(reqUrlCell.toString())));
+                .setModuleName(StrUtil.trimToEmpty(moduleNameCell.toString())));
     }
 
     private void handleTableInfo(Table table, XSSFRow row) {

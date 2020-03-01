@@ -11,5 +11,5 @@ import lombok.experimental.Accessors;
 public class CodeInfo {
     private String namespace;
     private String author;
-    private String requestUrl;
+    private String moduleName;
 }
