@@ -201,37 +201,36 @@ public class MybatisPlusGeneratorCode extends AbstractGeneratorCode {
                 FieldTypeEnum type = column.getType();
                 switch (type) {
                     case BOOLEAN:
-                        sb.append("    @TableId(\"").append(name).append("\")").append(LF);
+                        sb.append("    @TableField(\"").append(name).append("\")").append(LF);
                         sb.append("    private Boolean ").append(fieldName).append(";").append(LF);
                         break;
                     case BIG_DECIMAL:
-                        sb.append("    @TableId(\"").append(name).append("\")").append(LF);
+                        sb.append("    @TableField(\"").append(name).append("\")").append(LF);
                         sb.append("    private BigDecimal ").append(fieldName).append(";").append(LF);
                         break;
                     case INTEGER:
-                        sb.append("    @TableId(\"").append(name).append("\")").append(LF);
+                        sb.append("    @TableField(\"").append(name).append("\")").append(LF);
                         sb.append("    private Integer ").append(fieldName).append(";").append(LF);
                         break;
                     case LONG:
-                        sb.append("    @TableId(\"").append(name).append("\")").append(LF);
+                        sb.append("    @TableField(\"").append(name).append("\")").append(LF);
                         sb.append("    private Long ").append(fieldName).append(";").append(LF);
                         break;
                     case DATE_TIME:
-                        sb.append("    @TableId(\"").append(name).append("\")").append(LF);
                         if (StrUtil.equalsIgnoreCase(name, "create_time")) {
-                            sb.append("    @TableField(fill = FieldFill.INSERT)").append(LF);
+                            sb.append("    @TableField(value = \"create_time\", fill = FieldFill.INSERT)").append(LF);
                         }
                         if (StrUtil.equalsIgnoreCase(name, "update_time")) {
-                            sb.append("    @TableField(fill = FieldFill.INSERT_UPDATE)").append(LF);
+                            sb.append("    @TableField(value = \"update_time\", fill = FieldFill.INSERT_UPDATE)").append(LF);
                         }
                         sb.append("    private LocalDateTime ").append(fieldName).append(";").append(LF);
                         break;
                     case STRING:
-                        sb.append("    @TableId(\"").append(name).append("\")").append(LF);
+                        sb.append("    @TableField(\"").append(name).append("\")").append(LF);
                         sb.append("    private String ").append(fieldName).append(";").append(LF);
                         break;
                     case TINY_INT:
-                        sb.append("    @TableId(\"").append(name).append("\")").append(LF);
+                        sb.append("    @TableField(\"").append(name).append("\")").append(LF);
                         sb.append("    private Short ").append(fieldName).append(";").append(LF);
                         break;
                     default:

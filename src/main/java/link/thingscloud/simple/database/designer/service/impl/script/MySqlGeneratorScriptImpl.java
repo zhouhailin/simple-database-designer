@@ -69,6 +69,8 @@ public class MySqlGeneratorScriptImpl extends AbstractGeneratorScript {
      * `create_time` datetime(0) NOT NULL COMMENT '时间',
      * PRIMARY KEY (`id`)
      * ) COMMENT = '星河盛世';
+     * <p>
+     * CREATE DATABASE `myinfo_rec` CHARACTER SET 'utf8' COLLATE 'utf8_general_ci';
      *
      * @param sb
      * @param table
